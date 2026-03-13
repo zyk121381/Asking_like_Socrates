@@ -33,7 +33,7 @@ The pipeline consists of three main steps: **Preprocessing**, **Trace Generation
 
 ### 0\. Prerequisites
 
-Before running the generation script, ensure you have configured your API keys. Create a `.env` file in the root directory or export the necessary environment variables for the models you intend to use (e.g., OPENAI_API_KEY, OPENAI_BASE_URL, ARK_API_KEY, etc.).
+Before running the generation script, ensure you have configured your API keys. Create a `.env` file in the root directory or export the necessary environment variables for the models you intend to use (e.g., OPENAI_API_KEY, OPENAI_BASE_URL, VERIFIER_MODEL_API_KEY, VERIFIER_MODEL_BASE_URL, etc.).
 
 ### 1\. Preprocessing
 

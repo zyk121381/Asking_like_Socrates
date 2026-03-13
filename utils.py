@@ -15,8 +15,13 @@ load_dotenv()
 # Configuration
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
-ARK_API_KEY = os.getenv("ARK_API_KEY")
-DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
+
+# Verifier model configuration (configurable via .env)
+VERIFIER_MODEL_API_KEY = os.getenv("VERIFIER_MODEL_API_KEY")
+VERIFIER_MODEL_BASE_URL = os.getenv("VERIFIER_MODEL_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3")
+
+# Determine whether to use OpenAI or Ark client for verifier
+USE_ARK_FOR_VERIFIER = os.getenv("USE_ARK_FOR_VERIFIER", "true").lower() == "true"
 
 # Model names (configurable via .env)
 REASONER_MODEL = os.getenv("REASONER_MODEL", "gpt-5-mini")
@@ -92,19 +97,29 @@ def chat_completions(
     return completion.choices[0].message.content
 
 
-def chat_doubao(
+def chat_verifier(
     model: str,
     query: str,
     system_prompt: Optional[str] = None
 ) -> str:
     """
-    Calls Volcengine (Doubao) API for text-only interactions.
+    Calls Verifier API for text-only interactions.
+    Uses configurable VERIFIER_MODEL_BASE_URL and VERIFIER_MODEL_API_KEY.
+    Automatically chooses between OpenAI and Ark client based on USE_ARK_FOR_VERIFIER.
     """
-    client = Ark(
-        base_url=DOUBAO_BASE_URL,
-        api_key=ARK_API_KEY,
-    )
-    
+    if USE_ARK_FOR_VERIFIER:
+        # Use Ark client for Volcengine
+        client = Ark(
+            base_url=VERIFIER_MODEL_BASE_URL,
+            api_key=VERIFIER_MODEL_API_KEY,
+        )
+    else:
+        # Use OpenAI client for OpenAI-compatible APIs
+        client = OpenAI(
+            api_key=VERIFIER_MODEL_API_KEY,
+            base_url=VERIFIER_MODEL_BASE_URL,
+        )
+
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
@@ -115,7 +130,7 @@ def chat_doubao(
         model=model,
         messages=messages
     )
-    
+
     return completion.choices[0].message.content
 
 
@@ -129,21 +144,23 @@ class APIModel:
         self.system_prompt = system_prompt
 
     def _single_call(
-        self, 
-        query: str, 
+        self,
+        query: str,
         images: Optional[List[Tuple[Image.Image, str]]] = None
     ) -> str:
         """Dispatches the call to the appropriate provider based on model name."""
-        if self.model_name in ["gemini-2.5-flash", "gpt-5-mini"]:
+        # Use OpenAI-compatible API for reasoner and perceiver models
+        if self.model_name == REASONER_MODEL or self.model_name == PERCEIVER_MODEL:
             return chat_completions(
                 model=self.model_name,
                 query=query,
                 images=images,
                 system_prompt=self.system_prompt,
             )
-        elif self.model_name == "doubao-seed-1-6-thinking-250715":
-            # Note: Current implementation ignores images for Doubao
-            return chat_doubao(self.model_name, query, self.system_prompt)
+        # Use verifier API for the verifier model
+        elif self.model_name == VERIFIER_MODEL:
+            # Note: Verifier API ignores images
+            return chat_verifier(self.model_name, query, self.system_prompt)
         else:
             raise NotImplementedError(f"Unknown model: {self.model_name}")
 
@@ -177,6 +194,13 @@ class APIModel:
                     raise last_error
 
 
+
+# =========================
+# Test / Example Code
+# =========================
+# Run this file directly to test API connectivity and model responses:
+#   python utils.py
+# This code only executes when utils.py is run directly (not when imported).
 if __name__ == "__main__":
     model_name = "gemini-2.5-flash"
     # model_name = "gpt-5-mini"
