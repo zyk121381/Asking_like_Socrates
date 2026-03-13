@@ -13,7 +13,7 @@ import argparse
 
 import sys
 sys.path.append('.')
-from utils import APIModel
+from utils import APIModel, REASONER_MODEL, PERCEIVER_MODEL, VERIFIER_MODEL
 
 
 # =========================
@@ -186,7 +186,7 @@ def rewrite_query_with_reasoner(raw_query: str) -> str:
 
     user_query = "Original query: " + raw_query
     try:
-        rewritten = APIModel("gpt-5-mini", sys_prompt).get_response(user_query)
+        rewritten = APIModel(REASONER_MODEL, sys_prompt).get_response(user_query)
         if isinstance(rewritten, tuple):
             # compatible with (thinking, response)
             rewritten = rewritten[1]
@@ -675,14 +675,14 @@ if __name__ == "__main__":
 
     # Models
     r_system_prompt = build_reasoner_system_prompt(MAX_LOOP)
-    r_model = APIModel("gpt-5-mini", r_system_prompt)
-    p_model = APIModel("gemini-2.5-flash", P_SYSTEM_PROMPT)
+    r_model = APIModel(REASONER_MODEL, r_system_prompt)
+    p_model = APIModel(PERCEIVER_MODEL, P_SYSTEM_PROMPT)
 
     if VERIFY_INST is None:
         print("Verifier not required (verify_inst is None).")
         verify_model = None
     else:
-        verify_model = APIModel("doubao-seed-1-6-thinking-250715", VERIFY_SYSTEM_PROMPT)
+        verify_model = APIModel(VERIFIER_MODEL, VERIFY_SYSTEM_PROMPT)
 
     # Data
     # Expected parquet schema per row: see process_item() docstring for details.

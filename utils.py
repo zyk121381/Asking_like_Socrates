@@ -18,6 +18,11 @@ OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
 ARK_API_KEY = os.getenv("ARK_API_KEY")
 DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
 
+# Model names (configurable via .env)
+REASONER_MODEL = os.getenv("REASONER_MODEL", "gpt-5-mini")
+PERCEIVER_MODEL = os.getenv("PERCEIVER_MODEL", "gemini-2.5-flash")
+VERIFIER_MODEL = os.getenv("VERIFIER_MODEL", "doubao-seed-1-6-thinking-250715")
+
 MAX_RETRIES = 3
 
 
