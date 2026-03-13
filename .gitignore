@@ -26,7 +26,6 @@ MANIFEST
 # Common names for virtual envs
 venv/
 env/
-.env
 .venv/
 conda/
 .conda/
@@ -107,5 +106,5 @@ evaluation/
 # 但是如果你只想保留几个示例图片，就不需要取消上面的注释
 
 # Private Environment Variables (API Keys)
-.env
+
 .env.local
